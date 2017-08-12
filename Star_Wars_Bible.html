@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title></title>
+	<script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="select.dataTables.min.css">
+	<script type="text/javascript" src="jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="dataTables.select.min.js"></script>
+
+	<script type="text/javascript">
+		var personajes;
+
+		function cargar(){
+			//limpio la variable "personajes" por si vuelvo a llamar la función
+			personajes = new Array;
+
+			//cada vez que mando a llamar "http://swapi.co/api/people" retorna solamente 10 personajes, pero como yo quiero todos los personajes para eso utilizo este ciclo con URL dinámicas
+			for(var i = 1; i <= 8; i++){
+				var url = "http://swapi.co/api/people/?page=" + i;
+				
+				//la variable bandera la determino utilizando un if en una sola línea, esto para una sintáxis mas limpia y legible
+				//documentacion sobre la implentación de este if -> https://msdn.microsoft.com/es-es/library/be21c7hw(v=vs.94).aspx
+				var bandera = i == 8 ? true : false;
+
+				ejecutarllamado(url,bandera);
+			}			 
+		}
+
+		//función que se ejucatara para mandar a cargar la variable global "personajes" con el resultado de las llamadas getJson
+		function ejecutarllamado(url, bandera){	
+			var ejecutarCodigo = "$.getJSON( '" + url + "'," + "function( json) {" + "cargarInformacion(json," + bandera  + ");});";
+
+			//el eval lo que hace es que le dice a Javascript que ejecute una porción de código que tengo almacenado como un "String". En este caso en específico la funcion AJAX que me va a cargar la información
+			//documentacion y ejemplos sobre eval ->  https://www.w3schools.com/jsref/jsref_eval.asp	 		
+	  		eval(ejecutarCodigo);	 					 
+		}
+
+		//función que será llamada por la funcion denominada "ejecutarllamado" al momento de aplicar el "eval" 
+		//le paso una bandera como parametro, para que cuando esta sea true ya haya cargado toda la información del API de StarWars
+		function cargarInformacion(json, bandera){
+			if(bandera)
+				pintarTabla(personajes);
+			else{
+				for(var i = 0; i < json.results.length; i++)
+					personajes.push(json.results[i]);				
+			}
+		}
+
+		//esta función es la que se encarga de cargar y pintar la tabla con la información que se le indique
+		function pintarTabla(json){			
+			var dataSet = new Array;
+
+			//armando estructura de datos para mandar a la tabla a pintar
+			//documentacion de por que hago esto -> https://datatables.net/examples/data_sources/js_array.html
+			for(var i=0; i < json.length; i++){
+				var personaArray = new Array;
+				personaArray.push(json[i].name);
+				personaArray.push(json[i].gender);
+				dataSet.push(personaArray);
+			}
+
+			destruirTabla(charactersTable);
+			$('#charactersTable').DataTable({
+			 	searching: false,
+			 	select: true,
+			 	data: dataSet,
+			 	columns: [
+		            { title: "Name" },
+		            { title: "gender" }
+		        ]
+			 });
+
+
+			//SELECCION DE UNA TUPLA
+			var table = $('#charactersTable').DataTable();
+ 
+			table.on( 'select', function ( e, dt, type, indexes ) {
+			    if ( type === 'row' ) {
+			        var data = table.rows( indexes ).data()[0];
+			        for (var i = 0; i < 87; i++) {
+			        	if (data[0] == json[i].name) {
+			        		alert("aparecio")
+			        		
+			        		var dataSet = new Array;
+							var personaArray = new Array;
+							personaArray.push(json[i].name);
+							personaArray.push(json[i].vehicles);
+							personaArray.push(json[i].starships);
+							personaArray.push(json[i].species);
+							dataSet.push(personaArray);
+							
+							destruirTabla(vehiclesTable);
+							$('#vehiclesTable').DataTable({
+											searching: false,
+			 								select: true,
+											data: dataSet,
+										 	columns: [
+									            { title: "Name" },
+									            { title: "vehicles" }
+									        ]
+
+										});
+
+							destruirTabla(starshipsTable);
+							
+							$('#starshipsTable').DataTable({
+											data: dataSet,
+										 	columns: [
+									            { title: "Name" },
+									            { title: "starships" }
+									        ]
+
+										});
+								
+
+							destruirTabla(speciesTable);
+							$('#speciesTable').DataTable({
+											data: dataSet,
+										 	columns: [
+									            { title: "Name" },
+									            { title: "species" }
+									        ]
+
+										});
+
+						i = 88	
+			        	}
+			        	
+			        }
+			    }
+			} );
+		}
+
+		//como mejor práctica y evitar errores uso esta función para que cada vez que quiera pintar alguna tabla la limpio para poderla cargar con nueva informacion
+		//UTILIZARLA CADA VEZ QUE PINTE UNA TABLA
+		//documentacion -> https://datatables.net/reference/event/select
+		function destruirTabla(idTabla){
+			var tablaExiste = $.fn.DataTable.isDataTable(idTabla);
+            if(tablaExiste){
+                $(("\'" + idTabla + " tbody\'")).off();
+                var tabla = $(idTabla).DataTable();
+                tabla.destroy(false); 
+            }	
+		}
+	</script>
+	
+</head>
+<body>
+	<table id="charactersTable" class="display"></table>
+    <script type="text/javascript">
+    	cargar();
+    </script>
+    <div>
+    	<table id="vehiclesTable" class="display"></table><br>
+    	<table id="starshipsTable" class="display"></table><br>
+    	<table id="speciesTable" class="display"></table>
+    </div>
+</body>
+</html>
