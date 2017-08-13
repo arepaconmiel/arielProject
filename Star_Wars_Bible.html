@@ -17,13 +17,14 @@
 			personajes = new Array;
 
 			//cada vez que mando a llamar "http://swapi.co/api/people" retorna solamente 10 personajes, pero como yo quiero todos los personajes para eso utilizo este ciclo con URL dinámicas
-			for(var i = 1; i <= 8; i++){
+			for(var i = 1; i <= 9; i++){
 				var url = "http://swapi.co/api/people/?page=" + i;
+				//console.log(url);
 				
 				//la variable bandera la determino utilizando un if en una sola línea, esto para una sintáxis mas limpia y legible
 				//documentacion sobre la implentación de este if -> https://msdn.microsoft.com/es-es/library/be21c7hw(v=vs.94).aspx
-				var bandera = i == 8 ? true : false;
-
+				var bandera = i == 9 ? true : false;
+				//console.log()
 				ejecutarllamado(url,bandera);
 			}			 
 		}
@@ -40,12 +41,11 @@
 		//función que será llamada por la funcion denominada "ejecutarllamado" al momento de aplicar el "eval" 
 		//le paso una bandera como parametro, para que cuando esta sea true ya haya cargado toda la información del API de StarWars
 		function cargarInformacion(json, bandera){
+			for(var i = 0; i < json.results.length; i++)
+					personajes.push(json.results[i]);
 			if(bandera)
 				pintarTabla(personajes);
-			else{
-				for(var i = 0; i < json.results.length; i++)
-					personajes.push(json.results[i]);				
-			}
+			
 		}
 
 		//esta función es la que se encarga de cargar y pintar la tabla con la información que se le indique
