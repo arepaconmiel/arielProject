@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Star Wars</title>
+	<script type="text/javascript" src="js/jquery-3.2.0.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="css/select.dataTables.min.css">
+	<script type="text/javascript" src="js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="js/dataTables.select.min.js"></script>
+
+	<script type="text/javascript">
+		var personajes;
+
+		function cargar(){
+			//limpio la variable "personajes" por si vuelvo a llamar la función
+			personajes = new Array;
+
+			//cada vez que mando a llamar "http://swapi.co/api/people" retorna solamente 10 personajes, pero como yo quiero todos los personajes para eso utilizo este ciclo con URL dinámicas
+			for(var i = 1; i <= 9; i++){
+				var url = "http://swapi.co/api/people/?page=" + i;
+				//console.log(url);
+				
+				//la variable bandera la determino utilizando un if en una sola línea, esto para una sintáxis mas limpia y legible
+				//documentacion sobre la implentación de este if -> https://msdn.microsoft.com/es-es/library/be21c7hw(v=vs.94).aspx
+				var bandera = i == 9 ? true : false;
+				//console.log()
+				ejecutarllamado(url,bandera);
+			}			 
+		}
+
+		//función que se ejucatara para mandar a cargar la variable global "personajes" con el resultado de las llamadas getJson
+		function ejecutarllamado(url, bandera){	
+			//var ejecutarCodigo = "$.getJSON( '" + url + "'," + "function( json) {" + "cargarInformacion(json," + bandera  + ");});";
+
+			$.ajax(
+				{
+					url: url, 
+					success: function(json){
+	        			cargarInformacion(json,bandera);
+	    			}
+	    		}
+	    	);
+		
+			//el eval lo que hace es que le dice a Javascript que ejecute una porción de código que tengo almacenado como un "String". En este caso en específico la funcion AJAX que me va a cargar la información
+			//documentacion y ejemplos sobre eval ->  https://www.w3schools.com/jsref/jsref_eval.asp	 		
+	  		//eval(ejecutarCodigo);	 					 
+		}
+
+		//función que será llamada por la funcion denominada "ejecutarllamado" al momento de aplicar el "eval" 
+		//le paso una bandera como parametro, para que cuando esta sea true ya haya cargado toda la información del API de StarWars
+		function cargarInformacion(json, bandera){
+			for(var i = 0; i < json.results.length; i++)
+					personajes.push(json.results[i]);
+			if(bandera)
+				pintarTabla(personajes);
+			
+		}
+
+		//esta función es la que se encarga de cargar y pintar la tabla con la información que se le indique
+		function pintarTabla(json){			
+			var dataSet = new Array;
+
+			//armando estructura de datos para mandar a la tabla a pintar
+			//documentacion de por que hago esto -> https://datatables.net/examples/data_sources/js_array.html
+			for(var i=0; i < json.length; i++){
+				var personaArray = new Array;
+				personaArray.push(json[i].name);
+				personaArray.push(json[i].height);
+				personaArray.push(json[i].hair_color);
+				personaArray.push(json[i].skin_color);
+				personaArray.push(json[i].gender);
+				dataSet.push(personaArray);
+			}
+
+			//console.log(dataSet);
+
+			destruirTabla('#charactersTable');
+			$('#charactersTable').DataTable({
+			 	searching: false,
+			 	select: true,
+			 	data: dataSet,
+			 	columns: [
+		            { title: "Name" },
+			            { title: "Height" },
+			            { title: "Hair Color" },
+			            { title: "Skin Color" },
+			            { title: "Gender" }
+		        ]
+			 });
+
+
+			//SELECCION DE UNA TUPLA
+			var table = $('#charactersTable').DataTable();
+ 
+			table.on( 'select', function ( e, dt, type, indexes ) {
+			    if ( type === 'row' ) {
+			        var data = table.rows( indexes ).data()[0];
+			        for (var i = 0; i < 87; i++) {
+			        	if (data[0] == json[i].name) {
+			        	
+							
+			        		console.log(json[i]);
+							createVehicles(json[i].vehicles);
+							createStarships(json[i].starships);
+							createFilms(json[i].films);
+				
+
+
+
+						i = 88	
+			        	}
+			        	
+			        }
+			    }
+			} );
+		}
+
+		function createVehicles(vehicles){
+			//$('#vehiclesTable').html('');
+			destruirTabla('#vehiclesTable');
+			var final_array = new Array;
+			if(vehicles.length > 0){
+				
+				var count =0;
+				var tam = vehicles.length;
+
+				// Recursividad aumentando el contador para ir populando el array de vehiculos
+				vehiclesAjax(count,final_array,vehicles,tam);
+
+				
+			}
+			else{
+				//mensaje no hay 
+			}
+		}
+
+
+		function vehiclesAjax(count, final_array,vehicles,tam){
+			//console.log(count);
+			$.ajax(
+					{
+						url: vehicles[count], 
+						success: function(vehicle){
+							
+							var vehicleArray = new Array;
+		        			vehicleArray.push(vehicle.name);
+							vehicleArray.push(vehicle.model);
+							vehicleArray.push(vehicle.manufacturer);
+							vehicleArray.push(vehicle.cost_in_credits);
+							vehicleArray.push(vehicle.length);
+							vehicleArray.push(vehicle.max_atmosphering_speed);
+							vehicleArray.push(vehicle.crew);
+							vehicleArray.push(vehicle.passengers);
+							vehicleArray.push(vehicle.cargo_capacity);
+							vehicleArray.push(vehicle.consumables);
+							vehicleArray.push(vehicle.vehicle_class);
+							final_array.push(vehicleArray);
+
+							if(count == tam-1){
+								$('#vehiclesTable').DataTable({
+											searching: false,
+			 								select: true,
+											data: final_array,
+										 	columns: [
+									            { title: "Name" },
+									            { title: "Model" },
+									            { title: "Manufacturer" },
+									            { title: "Cost" },
+									            { title: "Length" },
+									            { title: "Atmosphering Speed" },
+									            { title: "Crew" },
+									            { title: "Passengers" },
+									            { title: "Cargo Capacity" },
+									            { title: "Consumables" },
+									            { title: "Vehicle Class" },
+									        ]
+
+										});
+							}else{
+								vehiclesAjax(count+1, final_array,vehicles,tam);
+							}
+		    			}
+		    		}
+		    	);
+		}
+
+		
+		
+
+
+		function createStarships(starships){
+			//$('#starshipsTable').html('');
+			destruirTabla('#starshipsTable');
+			var final_array = new Array;
+			if(starships.length > 0){
+				
+				var count =0;
+				var tam = starships.length;
+
+				// Recursividad aumentando el contador para ir populando el array de vehiculos
+				starshipsAjax(count,final_array,starships,tam);
+
+				
+			}
+			else{
+				//mensaje no hay 
+			}
+		}
+
+
+		function starshipsAjax(count, final_array,starships,tam){
+			//console.log(count);
+			$.ajax(
+					{
+						url: starships[count], 
+						success: function(starship){
+							
+							var starshipArray = new Array;
+		        			starshipArray.push(starship.name);
+							starshipArray.push(starship.model);
+							starshipArray.push(starship.manufacturer);
+							starshipArray.push(starship.cost_in_credits);
+							starshipArray.push(starship.length);
+							starshipArray.push(starship.max_atmosphering_speed);
+							starshipArray.push(starship.crew);
+							starshipArray.push(starship.passengers);
+							starshipArray.push(starship.cargo_capacity);
+							starshipArray.push(starship.consumables);
+							starshipArray.push(starship.hyperdrive_rating);
+							starshipArray.push(starship.MGLT);
+							starshipArray.push(starship.starship_class);
+							final_array.push(starshipArray);
+
+							if(count == tam-1){
+								$('#starshipsTable').DataTable({
+											searching: false,
+			 								select: true,
+											data: final_array,
+										 	columns: [
+									            { title: "Name" },
+									            { title: "Model" },
+									            { title: "Manufacturer" },
+									            { title: "Cost" },
+									            { title: "Length" },
+									            { title: "Atmosphering Speed" },
+									            { title: "Crew" },
+									            { title: "Passengers" },
+									            { title: "Cargo Capacity" },
+									            { title: "Consumables" },
+									            { title: "Hyperdrive Rating" },
+									            { title: "MGLT" },
+									            { title: "Starship_ Class" },
+									        ]
+
+										});
+							}else{
+								starshipsAjax(count+1, final_array,starships,tam);
+							}
+		    			}
+		    		}
+		    	);
+		}
+
+		
+		function createFilms(films){
+			//$('#filmsTable').html('');
+			destruirTabla('#filmsTable');
+			var final_array = new Array;
+			if(films.length > 0){
+				
+				var count =0;
+				var tam = films.length;
+
+				// Recursividad aumentando el contador para ir populando el array de vehiculos
+				filmsAjax(count,final_array,films,tam);
+
+				
+			}
+			else{
+				//mensaje no hay 
+			}
+		}
+
+
+
+
+		function filmsAjax(count, final_array,films,tam){
+			//console.log(count);
+			$.ajax(
+					{
+						url: films[count], 
+						success: function(film){
+							
+							var filmArray = new Array;
+		        			filmArray.push(film.title);
+							filmArray.push(film.episode_id);
+							filmArray.push(film.opening_crawl);
+							filmArray.push(film.director);
+							filmArray.push(film.producer);
+							filmArray.push(film.release_date);
+							final_array.push(filmArray);
+						
+
+							if(count == tam-1){
+								//console.log(final_array);
+								$('#filmsTable').DataTable({
+											searching: false,
+			 								select: true,
+											data: final_array,
+										 	columns: [
+									            { title: "title" },
+									            { title: "Episode Id" },
+									            { title: "Opening Crawl" },
+									            { title: "director" },
+									            { title: "producer" },
+									            { title: "Release Date" },
+						
+									        ]
+
+										});
+							}else{
+								filmsAjax(count+1, final_array,films,tam);
+							}
+		    			}
+		    		}
+		    	);
+		}
+							
+
+		//como mejor práctica y evitar errores uso esta función para que cada vez que quiera pintar alguna tabla la limpio para poderla cargar con nueva informacion
+		//UTILIZARLA CADA VEZ QUE PINTE UNA TABLA
+		//documentacion -> https://datatables.net/reference/event/select
+		function destruirTabla(idTabla){
+			var tablaExiste = $.fn.DataTable.isDataTable(idTabla);
+			//console.log(tablaExiste);
+            if(tablaExiste){
+                var tabla = $(idTabla).DataTable();
+                tabla.destroy(); 
+                $(idTabla).empty();
+            }	
+		}
+	</script>
+	
+</head>
+<body>
+	
+
+    <div id= "welcome">
+    	<h1 align="center">STAR WARS BIBLE</h1>
+
+    </div>
+    
+
+    <div id = "loading" style="width: 100%; height: 500px; position: absolute; padding-top:20px; text-align:center"><img src=""></div>
+
+
+	<div id="granDiv">
+		<div id = "opcion1"> 
+			<h1 align="center">Star Wars</h1>
+			<table id="charactersTable" class="display"></table>
+		    <script type="text/javascript">
+		    	cargar();
+		    </script>
+   	
+		</div>
+
+		<div id = "opcion2">
+		 	<input type="text" name="search">
+		 	<button>Buscar</button>			
+		</div>
+
+		<div id = "information">
+			<div id="tabs">
+				
+			</div>
+			<div id="content-info">
+				<div id = "vehicles">
+					<table id="vehiclesTable" class="display"></table>
+				</div>
+				<div id = "starships">
+					<table id="starshipsTable" class="display"></table>
+				</div>
+				<div id = "films">
+					<table id="filmsTable" class="display"></table>
+				</div>
+			</div>
+    	</div>
+    </div>
+</body>
+</html>
+
+

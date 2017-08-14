@@ -2,12 +2,12 @@
 <html>
 <head>
 
-	<title></title>
-	<script type="text/javascript" src="jquery-3.2.0.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="jquery.dataTables.min.css">
-	<link rel="stylesheet" type="text/css" href="select.dataTables.min.css">
-	<script type="text/javascript" src="jquery.dataTables.min.js"></script>
-	<script type="text/javascript" src="dataTables.select.min.js"></script>
+	<title>Star Wars</title>
+	<script type="text/javascript" src="js/jquery-3.2.0.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="css/select.dataTables.min.css">
+	<script type="text/javascript" src="js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="js/dataTables.select.min.js"></script>
 
 	<script type="text/javascript">
 		var personajes;
@@ -31,11 +31,17 @@
 
 		//función que se ejucatara para mandar a cargar la variable global "personajes" con el resultado de las llamadas getJson
 		function ejecutarllamado(url, bandera){	
-			var ejecutarCodigo = "$.getJSON( '" + url + "'," + "function( json) {" + "cargarInformacion(json," + bandera  + ");});";
+			//var ejecutarCodigo = "$.getJSON( '" + url + "'," + "function( json) {" + "cargarInformacion(json," + bandera  + ");});";
+
+			$.getJSON( url,
+				function (json){
+					cargarInformacion(json,bandera);
+				}
+			);
 
 			//el eval lo que hace es que le dice a Javascript que ejecute una porción de código que tengo almacenado como un "String". En este caso en específico la funcion AJAX que me va a cargar la información
 			//documentacion y ejemplos sobre eval ->  https://www.w3schools.com/jsref/jsref_eval.asp	 		
-	  		eval(ejecutarCodigo);	 					 
+	  		//eval(ejecutarCodigo);	 					 
 		}
 
 		//función que será llamada por la funcion denominada "ejecutarllamado" al momento de aplicar el "eval" 
@@ -57,6 +63,9 @@
 			for(var i=0; i < json.length; i++){
 				var personaArray = new Array;
 				personaArray.push(json[i].name);
+				personaArray.push(json[i].height);
+				personaArray.push(json[i].hair_color);
+				personaArray.push(json[i].skin_color);
 				personaArray.push(json[i].gender);
 				dataSet.push(personaArray);
 			}
@@ -68,7 +77,10 @@
 			 	data: dataSet,
 			 	columns: [
 		            { title: "Name" },
-		            { title: "gender" }
+			            { title: "Height" },
+			            { title: "Hair Color" },
+			            { title: "Skin Color" },
+			            { title: "Gender" }
 		        ]
 			 });
 
@@ -86,9 +98,9 @@
 			        		var dataSet = new Array;
 							var personaArray = new Array;
 							personaArray.push(json[i].name);
-							personaArray.push(json[i].vehicles);
-							personaArray.push(json[i].starships);
-							personaArray.push(json[i].species);
+							personaArray.push(json[i].vehicles[0]);
+							personaArray.push(json[i].starships[0]);
+							personaArray.push(json[i].species[0]);
 							dataSet.push(personaArray);
 							
 							destruirTabla(vehiclesTable);
@@ -98,29 +110,9 @@
 											data: dataSet,
 										 	columns: [
 									            { title: "Name" },
-									            { title: "vehicles" }
-									        ]
-
-										});
-
-							destruirTabla(starshipsTable);
-							
-							$('#starshipsTable').DataTable({
-											data: dataSet,
-										 	columns: [
-									            { title: "Name" },
-									            { title: "starships" }
-									        ]
-
-										});
-								
-
-							destruirTabla(speciesTable);
-							$('#speciesTable').DataTable({
-											data: dataSet,
-										 	columns: [
-									            { title: "Name" },
-									            { title: "species" }
+									            { title: "Vehicles" },
+									            { title: "Starships" },
+									            { title: "Species" }
 									        ]
 
 										});
@@ -148,14 +140,14 @@
 	
 </head>
 <body>
+	<h1 align="center">Star Wars</h1>
 	<table id="charactersTable" class="display"></table>
     <script type="text/javascript">
     	cargar();
     </script>
     <div>
-    	<table id="vehiclesTable" class="display"></table><br>
-    	<table id="starshipsTable" class="display"></table><br>
-    	<table id="speciesTable" class="display"></table>
+    	<h2>Person Table</h2>
+    	<table id="vehiclesTable" class="display"></table><br><br>
     </div>
 </body>
 </html>
